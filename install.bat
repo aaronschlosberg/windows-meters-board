@@ -1,12 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
-title Windows Meters Board - Full Installer
+title Master Meter - Full Installer
 
 echo ========================================
-echo   Windows Meters Board - Full Installer
+echo   Master Meter - Full Installer
 echo ========================================
-echo Installs Python (if needed) + deps + Startup shortcut.
-echo Single tray icon for RAM / VRAM / GPU / CPU / Wattage.
+echo Combines RAM / VRAM / GPU / CPU / Wattage / System Total
+echo into one tray icon. Super simple install + migration.
 echo.
 
 REM Check for real Python
@@ -46,7 +46,6 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Refresh PATH for this session
 for /f "delims=" %%i in ('powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path','User')"') do set "PATH=%%i;%PATH%"
 
 set "PYTHON=%LocalAppData%\Programs\Python\Python312\python.exe"
@@ -71,28 +70,67 @@ if errorlevel 1 (
 )
 
 echo.
-echo Creating Startup shortcut...
+echo Creating / overwriting Startup shortcut...
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-set "PYTHONW=%LocalAppData%\Programs\Python\Python312\pythonw.exe"
-if not exist "%PYTHONW%" set "PYTHONW=%PYTHON:python.exe=pythonw.exe%"
+set "PYTHONW=%PYTHON:python.exe=pythonw.exe%"
+if not exist "%PYTHONW%" set "PYTHONW=%PYTHON%"
 
 powershell -NoProfile -Command ^
   "$ws = New-Object -ComObject WScript.Shell; " ^
-  "$s = $ws.CreateShortcut([Environment]::GetFolderPath('Startup') + '\Meters Board.lnk'); " ^
+  "$s = $ws.CreateShortcut([Environment]::GetFolderPath('Startup') + '\Master Meter.lnk'); " ^
   "$s.TargetPath = '%PYTHONW%'; " ^
-  "$s.Arguments = '\"%SCRIPT_DIR%\meters_board.py\"'; " ^
+  "$s.Arguments = '\"%SCRIPT_DIR%\master_meter.py\"'; " ^
   "$s.WorkingDirectory = '%SCRIPT_DIR%'; " ^
   "$s.Save()"
+
+echo.
+echo Checking for existing single meters...
+set "STARTUP=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
+set "FOUND=0"
+for %%F in (
+    "RAM Meter.lnk"
+    "CPU Meter.lnk"
+    "Meters Board.lnk"
+    "windows-ram-meter.lnk"
+    "Hard Drive Meter.lnk"
+) do (
+    if exist "%STARTUP%\%%~F" (
+        set "FOUND=1"
+        echo Found: %%~F
+    )
+)
+
+if "!FOUND!"=="1" (
+    echo.
+    echo Existing single meter shortcuts detected.
+    set /p "MIGRATE=Remove them and collect under Master Meter? (Y/N): "
+    if /i "!MIGRATE!"=="Y" (
+        for %%F in (
+            "RAM Meter.lnk"
+            "CPU Meter.lnk"
+            "Meters Board.lnk"
+            "windows-ram-meter.lnk"
+            "Hard Drive Meter.lnk"
+        ) do (
+            if exist "%STARTUP%\%%~F" del /q "%STARTUP%\%%~F"
+        )
+        echo Old shortcuts removed. Master Meter will take over on next login.
+    ) else (
+        echo Left existing meters in place. You can quit them manually later.
+    )
+) else (
+    echo No existing single meter shortcuts found.
+)
 
 echo.
 echo ========================================
 echo   Done.
 echo ========================================
-echo Meters Board is installed and will start on next login.
-echo Right-click the tray icon to switch metrics.
+echo Master Meter is installed and will start on next login.
+echo Right-click the tray icon for menu. Left-click opens Task Manager.
 echo.
 echo To run it now:
-echo   %PYTHONW% "%SCRIPT_DIR%\meters_board.py"
+echo   %PYTHONW% "%SCRIPT_DIR%\master_meter.py"
 echo.
 pause

@@ -1,46 +1,52 @@
-# Windows Meters Board
+# Master Meter (extended from Meters Board)
 
-Lightweight single-process system tray utility for Windows.
+Single-process Windows system tray utility that combines:
 
-One tray icon. Right-click to switch the displayed dial between:
+- **RAM**
+- **VRAM** (NVIDIA)
+- **GPU** (util / temp / power)
+- **CPU** (short rolling average so spikes show but don't dominate)
+- **Wattage** (GPU power + cumulative Wh)
+- **System Total** (shows the single highest-taxed resource right now)
 
-- **RAM** (system memory + swap, top processes)
-- **VRAM** (NVIDIA GPU memory)
-- **GPU** (utilization, temp, power)
-- **CPU** (overall utilization)
-- **Wattage** (NVIDIA GPU power draw + cumulative Wh estimate)
+One tray icon. Right-click to choose which meter is displayed, select which are available, open Options, or Quit.  
+Left-click / double-click opens Task Manager (Performance preferred).
 
-Color-coded dials (green / yellow / red). Tooltip can show all metrics at once.
+## Super simple install + migration
 
-## Super easy install
-
-1. Download the zip and extract.
+1. Download the zip from the Drive folder or extract from repo.
 2. Double-click `install.bat`.
-   - Auto-detects or silently installs Python 3.12 (adds to user PATH).
-   - Installs dependencies.
-   - Creates a Startup shortcut (pythonw, no console window).
+   - Auto-installs Python 3.12 if missing.
+   - Installs all dependencies.
+   - Creates/overwrites Startup shortcut for Master Meter.
+   - Detects existing single-meter shortcuts (RAM Meter, CPU Meter, Meters Board, etc.) and offers to remove them so they collect under the master.
 
-The tray icon appears on next login (or run the pythonw command shown at the end of install).
+New installs cleanly overwrite any previous Master Meter shortcut.
+
+## Options window
+
+- Choose displayed meter
+- Check which meters are available
+- Refresh rate: 0.5 / 1 / 2 / 4 s (default 1 s, matches Task Manager Normal)
+- Color thresholds
+- Start with Windows toggle
+
+Config saved to `%APPDATA%\WindowsMasterMeter\config.json`.
 
 ## Manual run
 
 ```
-pythonw meters_board.py
+pythonw master_meter.py
 ```
 
 ## Requirements
 
 - Windows 10/11
-- NVIDIA GPU + driver (for VRAM / GPU / Wattage; others work without)
+- NVIDIA GPU + driver for VRAM / GPU / Wattage (others work without)
 - Python 3.10+ (installer handles it)
 
-## Features preserved from RAM meter
+Low-resource: single update thread, optional NVML.
 
-- Top processes list
-- Open Task Manager
-- Refresh rate toggle (1s / 2s)
-- Low resource usage
+Full source is in the shareable zip: G:\My Drive\_AI_Master_Folder\Grok\Development - Extensions and Small Apps\master-meter.zip
 
-Menu also includes reset for the Wattage cumulative counter and toggle for "all metrics in tooltip".
-
-Source: single file `meters_board.py` + `install.bat`.
+Based on the earlier windows-ram-meter and meters-board.
